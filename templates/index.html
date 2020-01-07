@@ -40,9 +40,10 @@
             <form action="start" id="f1" method="GET">
                 <img src="../static/img/person.png" style="margin-left:-42%" class="icons" />
                 <section class="section-text">How many rows and columns ?</section>
-                <input type="text" for="items" name="grid_size" id="grid_size" value="6" min="4" max="11" size="40%" class="borders" />
+                <input type="text" for="items" name="grid_size" id="grid_size" value="4" min="4" max="11" size="40%"
+                    class="borders" />
                 <input type="hidden" name="players" id="players" value="2" />
-                <input type="hidden" name="player_name" id="player_name"/>
+                <input type="hidden" name="player_name" id="player_name" />
                 <br>
                 <input type="submit" name="submit" id="submit" class="submit button" value="Go" onclick="changer()" />
             </form>
@@ -52,7 +53,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src='/static/js/main.js'></script>
     <script>
-        function changer(){
+        function changer() {
             var name = document.getElementById("name").value;
             document.getElementById("player_name").value = name;
         }

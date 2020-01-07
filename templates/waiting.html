@@ -17,7 +17,9 @@
         <div></div>
         <div></div>
     </div>
+    <input type="hidden" name="player_name" id="player_name" value="{{ player_name }}" />
     <script>
+        var player_name = document.getElementById("player_name").value;
         setInterval(function () {
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function () {
@@ -26,7 +28,7 @@
                     if (this.responseText != '0') {
                         var obb = this.responseText;
                         var obb = JSON.parse(this.responseText);
-                        window.location = "http://{{ host_ip }}:{{ port_no }}/grid?key=" + obb['key'];//+"&player1="+obb['player1']+"&players2="+obb['player2'];
+                        window.location = "http://{{ host_ip }}:{{ port_no }}/grid?player_name=" + player_name + "&key=" + obb['key'];//+"&player1="+obb['player1']+"&players2="+obb['player2'];
                     }
                 }
             };

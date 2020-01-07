@@ -13,17 +13,17 @@
 <body>
     <div>
         <button type="submit" class="home" id="home" onclick="home()">Home</button>
+        <button class="reset" onclick="reset()">Undo</button>
     </div>
     <div id="canvasContainer" class="container block">
         <!--<canvas id="dotBoxCanvas_0" width="480" height="397" class="st-current st-hover"></canvas> -->
         <svg height="600" width="600" id="tmp"></svg>
         <div class="player_list">
-            <label id="player1" style="background-color: yellowgreen;">Player1</label><br /><br />
-            <label id="player2" style="background-color: orange;">Player2</label><br />
+            <label id="player1" class="player1">Player1</label><label class="player_turn"
+                id="pturn">Turn</label><br /><br /><label class="player1" id="p1_score">0</label><br /><br /><br />
+            <label id="player2" class="player2">Player2</label><br /><br /><label class="player2"
+                id="p2_score">0</label><br />
         </div>
-    </div>
-    <div>
-        <button class="reset">Undo</button>
     </div>
     <input type="hidden" name="keykey" id="keykey" value="" />
 </body>
@@ -31,6 +31,27 @@
 
 <script src='/static/js/main.js'></script>
 <script>
+    var xx1, xx2, xx3, xx4, yy1, yy2, yy3, yy4;
+    function home() {
+        window.location.replace("http://{{ host_ip }}:{{ port_no }}");
+    }
+    function reset() {
+        var url = new URL(window.location.href);
+        window.location = url;
+    }
+    function point_generator(i, j) {
+        xx1 = i; yy1 = j + 1;
+        xx2 = i; yy2 = j - 1;
+        xx3 = i - 1; yy3 = j;
+        xx4 = i + 1; yy4 = j;
+    }
+    function point_checker(i, j) {
+        if (i == xx1 && j == yy1) { return false; }
+        if (i == xx2 && j == yy2) { return false; }
+        if (i == xx3 && j == yy3) { return false; }
+        if (i == xx4 && j == yy4) { return false; }
+        return true
+    }
     var size = 0;
     var key, player1, player2, player_id;
     function loadDoc() {
@@ -55,7 +76,10 @@
         };
         var url = new URL(window.location.href);
         key = url.searchParams.get("key");
-        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/get_grid?player_id=" + player_id + "&key=" + key, true);
+        player_id = url.searchParams.get("player_name");
+        console.log("player_id");
+        console.log(player_id);
+        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/get_grid?player_id=" + player_id + "&key=" + key, false);
         xhttp.send();
     }
     function hey(j, i, color) {
@@ -63,15 +87,38 @@
         var y = String(j);
         var px = String((i + 1) * 50);
         var py = String((j + 1) * 50);
-        document.getElementById("tmp").innerHTML += '<circle cx="' + px + '" cy="' + py + '" r="10" fill="' + color + '" id="m' + x + 'm' + y + '" onclick="hey2(' + x + ',' + y + ')"></circle>';
+        document.getElementById("tmp").innerHTML += '<circle cx="' + px + '" cy="' + py + '" r="10" fill="' + color + '" id="m' + x + 'm' + y + '"onclick="hey2(' + x + ',' + y + ')"></circle>';
     }
     //loadDoc();
     var flag = -1, x1, x2, y1, y2;
     function drawline(a, b, c, d) {
-        document.getElementById("tmp").innerHTML += '<line x1="' + a + '" y1="' + b + '" x2="' + c + '" y2="' + d + '" style="stroke:rgb(0,0,0);stroke-width:4" />';
+
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
+                if (this.responseText == "valid") {
+                    document.getElementById("tmp").innerHTML += '<line x1="' + a + '" y1="' + b + '" x2="' + c + '" y2="' + d + '" style="stroke:rgb(0,0,0);stroke-width:4" />';
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function () {
+                        if (this.readyState == 4 && this.status == 200) {
+                            var obb = this.responseText;
+                            var obb = JSON.parse(this.responseText);
+                            document.getElementById("tmp").innerHTML += obb['line_string'];
+                            var turn = obb['turn'];
+                            if (turn == 0) {
+                                document.getElementById("pturn").style.backgroundColor = "green";
+                            }
+                            else {
+                                document.getElementById("pturn").style.backgroundColor = "blue";
+                            }
+                        }
+                    };
+                    xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/update?player_id=" + player_id + "&key=" + key + "&x1=" + x1 + "&x2=" + x2 + "&y1=" + y1 + "&y2=" + y2 + '&save_line=m' + y1 + 'm' + x1 + 'm' + y2 + 'm' + x2, false);
+                    xhttp.send();
+                }
+                else {
+                    return "invalid";
+                }
             }
         };
         xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/update_line?player_id=" + player_id + "&key=" + key + "&line=" + '<line x1="' + a + '" y1="' + b + '" x2="' + c + '" y2="' + d + '" style="stroke:rgb(0,0,0);stroke-width:4" />');
@@ -82,44 +129,28 @@
         var st = 'm' + String(i) + 'm' + String(j);
         var ele = document.getElementById(st);
         ele.style = "fill:black";
+
         if (flag == 1) {
             if (x1 == i && y1 == j) {
+                flag = flag - 1;
+                return
+            }
+            if (point_checker(i, j)) {
                 flag = flag - 1;
                 return
             }
             flag = -1;
             x2 = i; y2 = j;
             drawline((x1 + 1) * 50, (y1 + 1) * 50, (x2 + 1) * 50, (y2 + 1) * 50);
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    var obb = this.responseText;
-                    var obb = JSON.parse(this.responseText);
-                    document.getElementById("tmp").innerHTML += obb['line_string'];
-                }
-            };
-            xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/update?player_id=" + player_id + "&key=" + key + "&x1=" + x1 + "&x2=" + x2 + "&y1=" + y1 + "&y2=" + y2 + '&save_line=m' + y1 + 'm' + x1 + 'm' + y2 + 'm' + x2, true);
-            xhttp.send();
         }
         else {
             x1 = i; y1 = j;
+            point_generator(i, j);
         }
     }
-    function set_id() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                var obb = this.responseText;
-                var obb = JSON.parse(this.responseText);
-                player_id = obb['player_id'];
-                console.log(player_id);
-            }
-        };
-        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/set_id?player_id=" + player_id + "&key=" + key, true);
-        xhttp.send();
-    }
+
     loadDoc();
-    set_id();
+    document.getElementById("player" + player_id.slice(7, 8)).style.fontSize = "2.3em";
     setInterval(function () {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
@@ -128,10 +159,42 @@
                 var obb = this.responseText;
                 if (obb == "gobackhome") { window.location = "http://{{ host_ip }}:{{ port_no }}"; }
                 var obb = JSON.parse(this.responseText);
+                if (obb['done'] == true) { window.location = "http://{{ host_ip }}:{{ port_no }}"; }
                 size = obb['size'];
                 var i, j, color;
                 document.getElementById("tmp").innerHTML = obb['line_string'];
                 document.getElementById("tmp").innerHTML += obb['line'];
+                document.getElementById("p1_score").innerHTML = obb['point'][0];
+                document.getElementById("p2_score").innerHTML = obb['point'][1];
+                if (obb['box'] == obb['point'][0] + obb['point'][1]) {
+                    //winner
+                    if (obb['point'][0] > obb['point'][1]) {
+                        alert(obb['players'][0] + " won ");
+                    }
+                    else if (obb['point'][0] < obb['point'][1]) {
+                        alert(obb['players'][1] + " won ");
+                    }
+                    else {
+                        alert("Draw");
+                    }
+                    //window.location = "http://{{ host_ip }}:{{ port_no }}";
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function () {
+                        if (this.readyState == 4 && this.status == 200) {
+                            var obb = this.responseText;
+                            if (obb == "gone"){window.location = "http://{{ host_ip }}:{{ port_no }}";}
+                        }
+                    };
+                    xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/done?key=" + key, false);
+                    xhttp.send();
+                }
+                var turn = obb['turn'];
+                if (turn == 0) {
+                    document.getElementById("pturn").style.backgroundColor = "green";
+                }
+                else {
+                    document.getElementById("pturn").style.backgroundColor = "blue";
+                }
                 for (i = 0; i < size; i++) {
                     for (j = 0; j < size; j++) {
                         if (obb['grid'][i][j] == "1") { color = "black"; }
@@ -141,11 +204,12 @@
                 }
             }
         };
-        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/get_grid?player_id=" + player_id + "&key=" + key, true);
+        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/get_grid?player_id=" + player_id + "&key=" + key, false);
         xhttp.send();
-    }, 3000);
+    }, 2000);
 
 </script>
+
 
 </html>
 </script>
