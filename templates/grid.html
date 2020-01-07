@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel='stylesheet' type='text/css' media='screen' href='/static/css/main.css'>
+
+    <title>Dot-Box</title>
+</head>
+
+<body>
+    <div>
+        <button type="submit" class="home" id="home" onclick="home()">Home</button>
+    </div>
+    <div id="canvasContainer" class="container block">
+        <!--<canvas id="dotBoxCanvas_0" width="480" height="397" class="st-current st-hover"></canvas> -->
+        <svg height="600" width="600" id="tmp"></svg>
+        <div class="player_list">
+            <label id="player1" style="background-color: yellowgreen;">Player1</label><br /><br />
+            <label id="player2" style="background-color: orange;">Player2</label><br />
+        </div>
+    </div>
+    <div>
+        <button class="reset">Undo</button>
+    </div>
+    <input type="hidden" name="keykey" id="keykey" value="" />
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<script src='/static/js/main.js'></script>
+<script>
+    var size = 0;
+    var key, player1, player2, player_id;
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var obb = this.responseText;
+                var obb = JSON.parse(this.responseText);
+                size = obb['size'];
+                var i, j, color;
+                document.getElementById("player1").innerHTML = obb['players'][0];
+                document.getElementById("player2").innerHTML = obb['players'][1];
+                document.getElementById("tmp").innerHTML += obb['line'];
+                for (i = 0; i < size; i++) {
+                    for (j = 0; j < size; j++) {
+                        if (obb['grid'][i][j] == "1") { color = "black"; }
+                        else { color = "red"; }
+                        hey(i, j, color);
+                    }
+                }
+            }
+        };
+        var url = new URL(window.location.href);
+        key = url.searchParams.get("key");
+        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/get_grid?player_id=" + player_id + "&key=" + key, true);
+        xhttp.send();
+    }
+    function hey(j, i, color) {
+        var x = String(i);
+        var y = String(j);
+        var px = String((i + 1) * 50);
+        var py = String((j + 1) * 50);
+        document.getElementById("tmp").innerHTML += '<circle cx="' + px + '" cy="' + py + '" r="10" fill="' + color + '" id="m' + x + 'm' + y + '" onclick="hey2(' + x + ',' + y + ')"></circle>';
+    }
+    //loadDoc();
+    var flag = -1, x1, x2, y1, y2;
+    function drawline(a, b, c, d) {
+        document.getElementById("tmp").innerHTML += '<line x1="' + a + '" y1="' + b + '" x2="' + c + '" y2="' + d + '" style="stroke:rgb(0,0,0);stroke-width:4" />';
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+            }
+        };
+        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/update_line?player_id=" + player_id + "&key=" + key + "&line=" + '<line x1="' + a + '" y1="' + b + '" x2="' + c + '" y2="' + d + '" style="stroke:rgb(0,0,0);stroke-width:4" />');
+        xhttp.send();
+    }
+    function hey2(i, j) {
+        flag = flag + 1;
+        var st = 'm' + String(i) + 'm' + String(j);
+        var ele = document.getElementById(st);
+        ele.style = "fill:black";
+        if (flag == 1) {
+            if (x1 == i && y1 == j) {
+                flag = flag - 1;
+                return
+            }
+            flag = -1;
+            x2 = i; y2 = j;
+            drawline((x1 + 1) * 50, (y1 + 1) * 50, (x2 + 1) * 50, (y2 + 1) * 50);
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var obb = this.responseText;
+                    var obb = JSON.parse(this.responseText);
+                    document.getElementById("tmp").innerHTML += obb['line_string'];
+                }
+            };
+            xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/update?player_id=" + player_id + "&key=" + key + "&x1=" + x1 + "&x2=" + x2 + "&y1=" + y1 + "&y2=" + y2 + '&save_line=m' + y1 + 'm' + x1 + 'm' + y2 + 'm' + x2, true);
+            xhttp.send();
+        }
+        else {
+            x1 = i; y1 = j;
+        }
+    }
+    function set_id() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var obb = this.responseText;
+                var obb = JSON.parse(this.responseText);
+                player_id = obb['player_id'];
+                console.log(player_id);
+            }
+        };
+        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/set_id?player_id=" + player_id + "&key=" + key, true);
+        xhttp.send();
+    }
+    loadDoc();
+    set_id();
+    setInterval(function () {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                //document.getElementById("demo").innerHTML = this.responseText;
+                var obb = this.responseText;
+                if (obb == "gobackhome") { window.location = "http://{{ host_ip }}:{{ port_no }}"; }
+                var obb = JSON.parse(this.responseText);
+                size = obb['size'];
+                var i, j, color;
+                document.getElementById("tmp").innerHTML = obb['line_string'];
+                document.getElementById("tmp").innerHTML += obb['line'];
+                for (i = 0; i < size; i++) {
+                    for (j = 0; j < size; j++) {
+                        if (obb['grid'][i][j] == "1") { color = "black"; }
+                        else { color = "red"; }
+                        hey(i, j, color);
+                    }
+                }
+            }
+        };
+        xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/ajax/get_grid?player_id=" + player_id + "&key=" + key, true);
+        xhttp.send();
+    }, 3000);
+
+</script>
+
+</html>
+</script>
+
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Dot-Box Game</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='/static/css/main.css'>
+</head>
+
+<body>
+    <h1 class="waiting-text">Waiting for players...</h1>
+    <div class="lds-ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <script>
+        setInterval(function () {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    //console.log(this.responseText);
+                    if (this.responseText != '0') {
+                        var obb = this.responseText;
+                        var obb = JSON.parse(this.responseText);
+                        window.location = "http://{{ host_ip }}:{{ port_no }}/grid?key=" + obb['key'];//+"&player1="+obb['player1']+"&players2="+obb['player2'];
+                    }
+                }
+            };
+            xhttp.open("GET", "http://{{ host_ip }}:{{ port_no }}/wait", true);
+            xhttp.send();
+        }, 3000);
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</body>
+
+</html>

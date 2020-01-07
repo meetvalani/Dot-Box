@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='/static/css/main.css'>
+</head>
+
+<body>
+    <div align="center">
+        <div class="header">
+            <section>DOT-BOX</section>
+        </div>
+        <div class="sectionTile header">
+            Start a Game
+        </div>
+        <div>
+            <section class="section-text-name">Enter Your Name:</section>
+            <input type="text" name="name" id="name" size="40%" class="borders" />
+        </div>
+        <!-- <div>
+            <div width="50%">
+                <img src="../static/img/person.png" style="margin-left:-40%;" class="icons" />
+                <section class="section-text">How many players ?</section>
+            </div>
+            <div>
+                <button class="button1 selected" value="2">2</button>
+                <button class="button1" value="3">3</button>
+                <button class="button1" value="4">4</button>
+            </div>
+        </div> -->
+        <div style="float: right;">
+            <label></label>
+            <label></label>
+        </div>
+        <div>
+            <form action="start" id="f1" method="GET">
+                <img src="../static/img/person.png" style="margin-left:-42%" class="icons" />
+                <section class="section-text">How many rows and columns ?</section>
+                <input type="text" for="items" name="grid_size" id="grid_size" value="6" min="4" max="11" size="40%" class="borders" />
+                <input type="hidden" name="players" id="players" value="2" />
+                <input type="hidden" name="player_name" id="player_name"/>
+                <br>
+                <input type="submit" name="submit" id="submit" class="submit button" value="Go" onclick="changer()" />
+            </form>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src='/static/js/main.js'></script>
+    <script>
+        function changer(){
+            var name = document.getElementById("name").value;
+            document.getElementById("player_name").value = name;
+        }
+    </script>
+</body>
+
+</html>
