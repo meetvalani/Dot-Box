@@ -1,0 +1,2 @@
+To test the app , download the repo and  extract it.
+After Extracting it  just run app.py with arguments (hostname and port number)  file and  visit  "localhost:[portnumber]".
